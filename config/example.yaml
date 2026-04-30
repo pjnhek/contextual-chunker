@@ -1,0 +1,38 @@
+# =============================================================================
+# Contextual Chunker - Example Configuration
+# =============================================================================
+# Drop your source documents (.txt / .md / .pdf / .docx) into data/in/
+# and run:  make chunk-config CONFIG=config/example.yaml
+# Output: data/out/chunks.jsonl (embed-ready records).
+
+input_dir: "data/in"
+output_path: "data/out/chunks.jsonl"
+
+# -----------------------------------------------------------------------------
+# Chunking
+# -----------------------------------------------------------------------------
+chunk_size: 512        # tokens per chunk
+chunk_overlap: 128     # overlap between consecutive chunks
+
+# -----------------------------------------------------------------------------
+# Contextual enrichment
+# -----------------------------------------------------------------------------
+contextual:
+  enabled: true
+  llm_provider: "gemini"          # "gemini" or "openai"
+  llm_model: "gemini-2.5-flash"   # provider-specific model id
+  batch_size: 50
+  max_context_tokens: 100         # truncation cap on the LLM-generated context
+  max_llm_tokens: 800             # output token budget per LLM call
+  temperature: 1.0
+  timeout_seconds: 30
+  concurrency_limit: 10           # max parallel LLM calls
+  max_retries: 3
+
+  # token_budget controls how chunk_size interacts with context:
+  #   "expand"  - base chunks stay at chunk_size; enriched output is larger
+  #               (~chunk_size + max_context_tokens). Use when your embedder
+  #               can accept long inputs (Gemini, Qwen3, Nemotron, etc.).
+  #   "reserve" - base chunks shrink so enriched output fits within chunk_size.
+  #               Use for embedders with hard token limits (e.g. BGE-Large @ 512).
+  token_budget: "expand"
