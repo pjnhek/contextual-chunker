@@ -2,7 +2,7 @@ import logging
 import os
 from typing import Optional
 
-from openai import AsyncOpenAI
+from openai import AsyncAzureOpenAI, AsyncOpenAI
 
 from contextual_chunker.llm.base import BaseContextLLM
 
@@ -11,7 +11,9 @@ class OpenAIContextLLM(BaseContextLLM):
     """
     OpenAI adapter using the async Responses API.
 
-    Set OPENAI_API_KEY in your environment, or pass api_key directly.
+    Defaults to public OpenAI with OPENAI_API_KEY. If AZURE_OPENAI_API_KEY and
+    AZURE_OPENAI_ENDPOINT are set in the environment, transparently uses Azure
+    OpenAI instead — `model_name` should be your Azure deployment name in that case.
     """
 
     def __init__(
@@ -19,14 +21,30 @@ class OpenAIContextLLM(BaseContextLLM):
         model_name: str = "gpt-4o-mini",
         api_key: Optional[str] = None,
     ):
+        self.model_name = model_name
+        self.logger = logging.getLogger(__name__)
+
+        azure_key = os.getenv("AZURE_OPENAI_API_KEY")
+        azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+
+        if azure_key and azure_endpoint:
+            api_version = os.getenv("AZURE_OPENAI_API_VERSION", "2025-04-01-preview")
+            self.client = AsyncAzureOpenAI(
+                api_key=azure_key,
+                api_version=api_version,
+                azure_endpoint=azure_endpoint,
+            )
+            self.logger.info(f"Using Azure OpenAI (endpoint={azure_endpoint})")
+            return
+
         key = api_key or os.getenv("OPENAI_API_KEY")
         if not key:
             raise RuntimeError(
-                "OPENAI_API_KEY is missing. Set it in .env or pass api_key= explicitly."
+                "OPENAI_API_KEY is missing. Set it in .env, pass api_key= "
+                "explicitly, or set AZURE_OPENAI_API_KEY + AZURE_OPENAI_ENDPOINT "
+                "to use Azure OpenAI."
             )
-        self.model_name = model_name
         self.client = AsyncOpenAI(api_key=key)
-        self.logger = logging.getLogger(__name__)
 
     @staticmethod
     def _extract_output_text(resp) -> str:

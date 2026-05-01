@@ -47,7 +47,11 @@ The `text` field is what your embedder should consume.
 
 ## Bring-your-own LLM
 
-Built-in providers: **Gemini** (`google-genai`) and **OpenAI**. To plug in any other provider (Anthropic, Bedrock, vLLM, etc.), implement `BaseContextLLM`:
+Built-in providers: **Gemini** (`google-genai`) and **OpenAI** — the OpenAI adapter transparently uses **Azure OpenAI** when `AZURE_OPENAI_API_KEY` and `AZURE_OPENAI_ENDPOINT` are set in the environment (in that case `llm_model` should be your Azure deployment name).
+
+> **Note for reasoning models** (OpenAI gpt-5 and o-series): bump `max_llm_tokens` to ~2000. They spend output budget on internal thinking before producing the visible response, so the default of 800 can return empty.
+
+To plug in any other provider (Anthropic, Bedrock, vLLM, etc.), implement `BaseContextLLM`:
 
 ```python
 from contextual_chunker.llm.base import BaseContextLLM

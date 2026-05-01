@@ -24,6 +24,9 @@ contextual:
   batch_size: 50
   max_context_tokens: 100         # truncation cap on the LLM-generated context
   max_llm_tokens: 800             # output token budget per LLM call
+                                  # Reasoning models (e.g. OpenAI gpt-5, o-series)
+                                  # spend output budget on internal thinking — bump
+                                  # this to ~2000 if you see empty contexts.
   temperature: 1.0
   timeout_seconds: 30
   concurrency_limit: 10           # max parallel LLM calls
