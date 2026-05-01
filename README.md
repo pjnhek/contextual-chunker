@@ -102,6 +102,14 @@ See `config/example.yaml`. Key knobs:
 | `contextual.concurrency_limit` | Max parallel LLM calls. |
 | `contextual.llm_provider` | `gemini` or `openai`. |
 
+## Development
+
+Run the test suite with:
+
+```bash
+make test
+```
+
 ## Downstream
 
 The output JSONL is embedder-agnostic. See `examples/ingest_to_redis.py` for a reference script that embeds + writes to Redis (not part of the core library).
