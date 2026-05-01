@@ -19,7 +19,9 @@ def extract_docx(path: Path) -> Tuple[str, Dict]:
             if cells:
                 parts.append(" | ".join(cells))
 
-    return "\n".join(parts).strip(), {
+    # Don't strip the joined output — keeping trailing whitespace preserves
+    # tokenization parity with downstream chunkers.
+    return "\n".join(parts), {
         "source_file": str(path),
         "doc_type": "docx",
         "extractor": "python-docx",

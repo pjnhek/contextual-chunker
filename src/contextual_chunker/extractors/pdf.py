@@ -12,7 +12,10 @@ def extract_pdf(path: Path) -> Tuple[str, Dict]:
         for page in doc:
             pages.append(page.get_text("text"))
 
-    text = "\n".join(pages).strip()
+    # Don't strip — trailing whitespace is meaningful for chunk-boundary parity
+    # with downstream tokenizers, and any leading whitespace from the first page
+    # is rarely worth losing structural fidelity over.
+    text = "\n".join(pages)
     return text, {
         "source_file": str(path),
         "doc_type": "pdf",
