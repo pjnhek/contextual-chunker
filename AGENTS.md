@@ -4,7 +4,7 @@ Instructions for AI coding agents (Cursor, Claude Code, Codex, etc.) working in 
 
 ## What this repo is
 
-A standalone library for **Anthropic-style contextual retrieval chunking**. It takes documents in (`.txt`, `.md`, `.pdf`, `.docx`), runs token-based chunking, then calls an LLM per chunk to generate a short document-context summary that's prepended to the chunk before embedding. Output is embed-ready JSONL.
+A standalone library implementation of Anthropic's contextual retrieval pattern (https://www.anthropic.com/news/contextual-retrieval). It takes documents in (`.txt`, `.md`, `.pdf`, `.docx`), runs token-based chunking, then calls an LLM per chunk to generate a short document-context summary that's prepended to the chunk before embedding. Output is embed-ready JSONL.
 
 ## Setup
 

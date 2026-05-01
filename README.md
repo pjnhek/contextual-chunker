@@ -1,8 +1,8 @@
 # contextual-chunker
 
-Anthropic-style contextual retrieval chunking, packaged as a standalone library.
+A standalone library implementation of Anthropic's [contextual retrieval](https://www.anthropic.com/news/contextual-retrieval) pattern.
 
-For each chunk in a document, an LLM generates a short context summary explaining what the document is about and where the chunk fits. The summary is prepended to the chunk before embedding, dramatically improving retrieval quality.
+For each chunk in a document, an LLM generates a short context summary explaining what the document is about and where the chunk fits. The summary is prepended to the chunk before embedding, which substantially improves retrieval quality versus chunking alone (Anthropic reports ~35% reduction in retrieval failures on their internal benchmarks).
 
 ```
 [CONTEXT] This is the user manual for the Acme Pro 9000 cordless drill, covering

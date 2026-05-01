@@ -3,7 +3,10 @@ Contextual chunking decorator: enriches chunks with LLM-generated document conte
 
 For each chunk, an LLM generates a concise summary of the parent document, which
 is prepended to the chunk before embedding. This disambiguates chunks during
-retrieval (Anthropic's contextual retrieval pattern).
+retrieval.
+
+Implements the contextual retrieval pattern described by Anthropic:
+https://www.anthropic.com/news/contextual-retrieval
 
 Async concurrency (configurable semaphore) processes chunks in parallel.
 """
