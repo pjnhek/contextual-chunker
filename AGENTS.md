@@ -8,6 +8,8 @@ A standalone library implementation of Anthropic's contextual retrieval pattern 
 
 ## Setup
 
+Requires `uv` (https://docs.astral.sh/uv/getting-started/installation/) and `make` on `PATH` first. If `uv` is missing, run `curl -LsSf https://astral.sh/uv/install.sh | sh`. If `make` is missing (Windows), the human user can run the commands inside `Makefile` directly.
+
 ```bash
 make install                          # uv sync
 cp .env.example .env                  # fill in GOOGLE_API_KEY or OPENAI_API_KEY

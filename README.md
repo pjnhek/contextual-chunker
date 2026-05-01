@@ -21,8 +21,24 @@ before first use and stored at 40-60% charge if unused for more than 30 days...
 
 ## Quickstart
 
+### Prerequisites
+
+You need two things on your `PATH` before the commands below will work:
+
+- **`uv`** — Astral's Python package manager. Install: https://docs.astral.sh/uv/getting-started/installation/
+  - macOS / Linux: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+  - Windows: `powershell -c "irm https://astral.sh/uv/install.ps1 | iex"`
+  - Or via Homebrew: `brew install uv`
+- **`make`** — comes preinstalled on macOS and most Linux distros.
+  - Windows: install via [Chocolatey](https://chocolatey.org/) (`choco install make`) or use WSL.
+  - Don't have / don't want `make`? Run the underlying commands directly — see the [Makefile](Makefile), every target is a one-liner.
+
+Verify with `uv --version` and `make --version`.
+
+### Run
+
 ```bash
-git clone <this repo>
+git clone https://github.com/pjnhek/contextual-chunker
 cd contextual-chunker
 make install                                # uv sync
 cp .env.example .env                        # fill in GOOGLE_API_KEY or OPENAI_API_KEY
