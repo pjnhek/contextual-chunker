@@ -37,18 +37,25 @@ def _build_llm(ctx: ContextualConfig) -> BaseContextLLM:
     raise ValueError(f"Unknown llm_provider: {ctx.llm_provider!r}")
 
 
-def _build_chunker(config: ChunkerConfig) -> ContextualChunker:
+def _build_base_chunker(config: ChunkerConfig, reserve_context: bool) -> TokenTextSplitter:
     ctx = config.contextual
-    base_chunk_size = compute_base_chunk_size(
-        chunk_size=config.chunk_size,
-        chunk_overlap=config.chunk_overlap,
-        max_context_tokens=ctx.max_context_tokens,
-        token_budget=ctx.token_budget,
-    )
-    base = TokenTextSplitter(
+    base_chunk_size = config.chunk_size
+    if reserve_context:
+        base_chunk_size = compute_base_chunk_size(
+            chunk_size=config.chunk_size,
+            chunk_overlap=config.chunk_overlap,
+            max_context_tokens=ctx.max_context_tokens,
+            token_budget=ctx.token_budget,
+        )
+    return TokenTextSplitter(
         chunk_size=base_chunk_size,
         chunk_overlap=config.chunk_overlap,
     )
+
+
+def _build_chunker(config: ChunkerConfig) -> ContextualChunker:
+    ctx = config.contextual
+    base = _build_base_chunker(config, reserve_context=True)
     return ContextualChunker(
         base_chunker=base,
         llm_generator=_build_llm(ctx),
@@ -106,8 +113,14 @@ def run(config: ChunkerConfig) -> int:
         doc_id = _doc_id_for_path(path, input_dir, seen_doc_ids)
         docs.append({"document": text, "doc_id": doc_id, "metadata": meta})
 
-    chunker = _build_chunker(config)
-    expanded_docs, enriched, originals, contexts, _ = chunker.get_chunk_contexts(docs, "document")
+    if config.contextual.enabled:
+        chunker = _build_chunker(config)
+        expanded_docs, enriched, originals, contexts, _ = chunker.get_chunk_contexts(docs, "document")
+    else:
+        chunker = _build_base_chunker(config, reserve_context=False)
+        expanded_docs, originals, _ = chunker.split_documents(docs, "document")
+        enriched = originals
+        contexts = [None] * len(originals)
 
     # Build per-doc chunk indices so chunk_id is deterministic.
     chunk_index_per_doc: dict[str, int] = {}

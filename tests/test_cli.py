@@ -84,3 +84,32 @@ def test_cli_uses_relative_paths_for_doc_ids(tmp_path: Path, monkeypatch):
     assert written == len(records)
     assert {r["source_doc_id"] for r in records} == {"alpha__report", "beta__report"}
     assert len({r["chunk_id"] for r in records}) == len(records)
+
+
+def test_cli_can_disable_contextual_enrichment(tmp_path: Path, monkeypatch):
+    in_dir = tmp_path / "in"
+    in_dir.mkdir()
+    (in_dir / "doc.txt").write_text("alpha beta gamma " * 50, encoding="utf-8")
+
+    out_path = tmp_path / "out" / "chunks.jsonl"
+    config = ChunkerConfig(
+        chunk_size=64,
+        chunk_overlap=8,
+        input_dir=str(in_dir),
+        output_path=str(out_path),
+    )
+    config.contextual.enabled = False
+
+    def fail_build_llm(ctx):
+        raise AssertionError("disabled contextual enrichment should not build an LLM")
+
+    monkeypatch.setattr(cli, "_build_llm", fail_build_llm)
+
+    written = cli.run(config)
+    records = [json.loads(line) for line in out_path.read_text().splitlines() if line.strip()]
+
+    assert written == len(records)
+    assert records
+    for record in records:
+        assert record["text"] == record["original_chunk"]
+        assert record["chunk_context"] is None
