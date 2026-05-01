@@ -8,6 +8,7 @@ Usage:
 """
 
 import argparse
+import hashlib
 import logging
 import sys
 from pathlib import Path
@@ -71,6 +72,24 @@ def _gather_input_files(input_dir: Path) -> List[Path]:
     return files
 
 
+def _doc_id_for_path(path: Path, input_dir: Path, seen_doc_ids: set[str]) -> str:
+    rel_path = path.relative_to(input_dir)
+    base = slugify("__".join(rel_path.with_suffix("").parts))
+    doc_id = base
+    if doc_id in seen_doc_ids:
+        digest = hashlib.blake2s(rel_path.as_posix().encode("utf-8"), digest_size=4).hexdigest()
+        doc_id = f"{base}_{digest}"
+
+    counter = 2
+    unique_doc_id = doc_id
+    while unique_doc_id in seen_doc_ids:
+        unique_doc_id = f"{doc_id}_{counter}"
+        counter += 1
+
+    seen_doc_ids.add(unique_doc_id)
+    return unique_doc_id
+
+
 def run(config: ChunkerConfig) -> int:
     """Run extraction + chunking + enrichment for every file under input_dir."""
     input_dir = Path(config.input_dir)
@@ -78,12 +97,13 @@ def run(config: ChunkerConfig) -> int:
     logging.info(f"Found {len(files)} input files in {input_dir}")
 
     docs = []
+    seen_doc_ids: set[str] = set()
     for path in files:
         text, meta = extract_text(path)
         if not text.strip():
             logging.warning(f"Skipping empty document: {path}")
             continue
-        doc_id = slugify(path.stem)
+        doc_id = _doc_id_for_path(path, input_dir, seen_doc_ids)
         docs.append({"document": text, "doc_id": doc_id, "metadata": meta})
 
     chunker = _build_chunker(config)

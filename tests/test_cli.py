@@ -56,3 +56,31 @@ def test_cli_run_writes_jsonl(tmp_path: Path, monkeypatch):
         indices_by_doc.setdefault(r["source_doc_id"], []).append(r["chunk_index"])
     for doc_id, indices in indices_by_doc.items():
         assert indices == list(range(len(indices)))
+
+
+def test_cli_uses_relative_paths_for_doc_ids(tmp_path: Path, monkeypatch):
+    in_dir = tmp_path / "in"
+    (in_dir / "alpha").mkdir(parents=True)
+    (in_dir / "beta").mkdir()
+    (in_dir / "alpha" / "report.txt").write_text("alpha beta gamma " * 50, encoding="utf-8")
+    (in_dir / "beta" / "report.txt").write_text("lorem ipsum dolor " * 50, encoding="utf-8")
+
+    out_path = tmp_path / "out" / "chunks.jsonl"
+    config = ChunkerConfig(
+        chunk_size=64,
+        chunk_overlap=8,
+        input_dir=str(in_dir),
+        output_path=str(out_path),
+    )
+    config.contextual.concurrency_limit = 2
+    config.contextual.batch_size = 1
+    config.contextual.max_context_tokens = 50
+
+    monkeypatch.setattr(cli, "_build_llm", lambda ctx: _StubLLM())
+
+    written = cli.run(config)
+    records = [json.loads(line) for line in out_path.read_text().splitlines() if line.strip()]
+
+    assert written == len(records)
+    assert {r["source_doc_id"] for r in records} == {"alpha__report", "beta__report"}
+    assert len({r["chunk_id"] for r in records}) == len(records)
